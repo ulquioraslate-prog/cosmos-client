@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "net.cosmos.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "client": [
+    "BlockBreakMixin",
+    "GameRendererMixin",
+    "ClientPlayerEntityMixin",
+    "ClientPlayerInteractionManagerMixin",
+    "WorldRendererMixin"
+  ],
+  "injectors": { "defaultRequire": 1 }
+}
