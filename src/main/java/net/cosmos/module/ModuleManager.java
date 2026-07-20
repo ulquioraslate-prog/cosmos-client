@@ -46,7 +46,7 @@ public class ModuleManager {
         register(new Tracers());
         register(new Chams());
         // Utility
-        register(new Timer());
+        register(new net.cosmos.module.modules.utility.Timer());
         register(new FPSBoost());
         register(new ClipboardCoords());
     }

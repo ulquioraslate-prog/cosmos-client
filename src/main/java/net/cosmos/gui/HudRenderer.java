@@ -46,7 +46,7 @@ public class HudRenderer {
             var pos = mc.player.getBlockPos();
             String coords = String.format("XYZ: %d, %d, %d", pos.getX(), pos.getY(), pos.getZ());
             ctx.drawTextWithShadow(mc.textRenderer, coords, 2, screenH - 22, 0xAAFFFFFF);
-            String fps = "FPS: " + MinecraftClient.getCurrentFps();
+            String fps = "FPS: " + MinecraftClient.getInstance().getCurrentFps();
             ctx.drawTextWithShadow(mc.textRenderer, fps, 2, screenH - 12, 0x88FFFFFF);
         }
     }

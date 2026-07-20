@@ -11,7 +11,7 @@ public class FPSBoost extends Module {
     public final BoolSetting fog        = addSetting(new BoolSetting("NoFog",        "Disable fog",           true));
     public FPSBoost() { super("FPSBoost", "Improve performance", Category.UTILITY); }
     @Override public void onTick(MinecraftClient c) {
-        if (clouds.getValue())    c.options.getCloudRenderModeValue().ifPresent(v -> {});
-        if (fog.getValue())       c.gameRenderer.setFovMultiplier(c.gameRenderer.getFovMultiplier());
+        if (clouds.getValue()) c.options.getCloudRenderMode().setValue(net.minecraft.client.option.CloudRenderMode.OFF);
+        // fog disabled via mixin
     }
 }
