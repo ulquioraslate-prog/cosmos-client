@@ -4,7 +4,6 @@ import net.cosmos.module.Category;
 import net.cosmos.module.Module;
 import net.cosmos.setting.NumberSetting;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.item.FoodItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Hand;
 
@@ -20,8 +19,8 @@ public class AutoEat extends Module {
         int best = -1, bestN = 0;
         for (int i = 0; i < 9; i++) {
             ItemStack s = inv.getStack(i);
-            if (!s.isEmpty() && s.getItem() instanceof FoodItem fi) {
-                int n = fi.getFoodComponent().getHunger();
+            if (!s.isEmpty() && s.getItem().isFood()) {
+                int n = s.getItem().getFoodComponent().getHunger();
                 if (n > bestN) { bestN = n; best = i; }
             }
         }

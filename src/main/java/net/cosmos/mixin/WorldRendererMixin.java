@@ -1,5 +1,6 @@
 package net.cosmos.mixin;
 
+import net.minecraft.client.render.GameRenderer;
 import net.cosmos.CosmosClient;
 import net.cosmos.module.modules.render.OreESP;
 import net.cosmos.module.modules.render.Tracers;
