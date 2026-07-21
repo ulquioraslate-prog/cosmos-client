@@ -31,7 +31,7 @@ public abstract class Module {
 
     public void setEnabled(boolean e) {
         this.enabled = e;
-        if (e) onEnable(); else onDisable();
+        if (e) try { onEnable(); } catch (Throwable cosmosErr) { System.out.println("[Cosmos] enable error: " + cosmosErr); } else try { onDisable(); } catch (Throwable cosmosErr) { System.out.println("[Cosmos] disable error: " + cosmosErr); }
     }
 
     public void toggle() { setEnabled(!enabled); }
