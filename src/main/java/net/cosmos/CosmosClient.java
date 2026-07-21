@@ -5,10 +5,12 @@ import net.cosmos.event.EventBus;
 import net.cosmos.gui.CosmosScreen;
 import net.cosmos.gui.HudRenderer;
 import net.cosmos.module.ModuleManager;
+import net.cosmos.render.Render3D;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
@@ -33,15 +35,13 @@ public class CosmosClient implements ClientModInitializer {
     public void onInitializeClient() {
         LOGGER.info("[{}] Starting v{}", NAME, VERSION);
 
-        eventBus     = new EventBus();
+        eventBus      = new EventBus();
         moduleManager = new ModuleManager();
         configManager = new ConfigManager();
         cosmosScreen  = new CosmosScreen();
 
-        // Load saved config
         configManager.load();
 
-        // Register Right Shift key
         guiKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
             "key.cosmosclient.gui",
             InputUtil.Type.KEYSYM,
@@ -49,7 +49,6 @@ public class CosmosClient implements ClientModInitializer {
             "category.cosmosclient"
         ));
 
-        // Tick
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (guiKey.wasPressed()) {
                 if (client.currentScreen instanceof CosmosScreen) client.setScreen(null);
@@ -57,15 +56,17 @@ public class CosmosClient implements ClientModInitializer {
             }
             if (client.player != null) {
                 moduleManager.onTick(client);
+                Render3D.tick(client);
             }
         });
 
-        // HUD
         HudRenderCallback.EVENT.register((ctx, tickDelta) -> {
             if (MinecraftClient.getInstance().player != null) {
                 HudRenderer.render(ctx, tickDelta);
             }
         });
+
+        WorldRenderEvents.LAST.register(Render3D::render);
 
         LOGGER.info("[{}] Ready! Modules: {}", NAME, moduleManager.getModules().size());
     }

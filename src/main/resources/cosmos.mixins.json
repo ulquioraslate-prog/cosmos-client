@@ -8,9 +8,11 @@
     "ClientPlayerEntityMixin",
     "ClientPlayerInteractionManagerMixin",
     "WorldRendererMixin",
-    "ClientPlayNetworkHandlerMixin"
+    "ClientPlayNetworkHandlerMixin",
+    "PlayerEntityMixin",
+    "RenderTickCounterMixin"
   ],
   "injectors": {
-    "defaultRequire": 1
+    "defaultRequire": 0
   }
 }
