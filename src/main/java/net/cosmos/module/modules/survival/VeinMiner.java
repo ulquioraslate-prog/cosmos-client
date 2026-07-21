@@ -8,11 +8,11 @@ import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.PickaxeItem;
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.registry.Registries;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.world.World;
+import net.minecraft.util.math.Vec3d;
 import java.util.*;
 
 public class VeinMiner extends Module {
@@ -31,37 +31,58 @@ public class VeinMiner extends Module {
     public final BoolSetting requirePickaxe = addSetting(new BoolSetting("RequirePickaxe", "Only with pickaxe", true));
     public final NumberSetting maxBlocks     = addSetting(new NumberSetting("MaxBlocks", "Max blocks to mine", 64, 1, 256));
 
+    private final ArrayDeque<BlockPos> queue = new ArrayDeque<>();
+    private final HashSet<BlockPos> queued = new HashSet<>();
+
     public VeinMiner() { super("VeinMiner", "Mine entire ore vein at once", Category.SURVIVAL); }
+
+    @Override public void onDisable() { queue.clear(); queued.clear(); }
+
+    private static String normalize(Block b) {
+        return Registries.BLOCK.getId(b).getPath().replace("deepslate_", "");
+    }
 
     public void onOreBroken(MinecraftClient mc, BlockPos start) {
         if (!enabled || mc.world == null || mc.player == null) return;
         if (requirePickaxe.getValue() && !(mc.player.getMainHandStack().getItem() instanceof PickaxeItem)) return;
-        World w = mc.world;
-        Block target = w.getBlockState(start).getBlock();
-        if (!ORES.contains(target)) return;
 
-        String tn = Registries.BLOCK.getId(target).getPath().replace("deepslate_", "");
-        Set<BlockPos> visited = new LinkedHashSet<>();
-        Deque<BlockPos> queue = new ArrayDeque<>();
-        queue.add(start); visited.add(start);
+        String tn = null;
+        for (Direction d : Direction.values()) {
+            Block b = mc.world.getBlockState(start.offset(d)).getBlock();
+            if (ORES.contains(b)) { tn = normalize(b); break; }
+        }
+        if (tn == null) return;
+
         int max = maxBlocks.getValue().intValue();
+        Set<BlockPos> visited = new HashSet<>();
+        Deque<BlockPos> bfs = new ArrayDeque<>();
+        bfs.add(start);
+        visited.add(start);
 
-        while (!queue.isEmpty() && visited.size() < max) {
-            BlockPos p = queue.poll();
+        while (!bfs.isEmpty() && visited.size() < max) {
+            BlockPos p = bfs.poll();
             for (int dx = -1; dx <= 1; dx++) for (int dy = -1; dy <= 1; dy++) for (int dz = -1; dz <= 1; dz++) {
                 if (dx == 0 && dy == 0 && dz == 0) continue;
                 BlockPos n = p.add(dx, dy, dz);
-                if (!visited.contains(n)) {
-                    Block b = w.getBlockState(n).getBlock();
-                    if (Registries.BLOCK.getId(b).getPath().replace("deepslate_", "").equals(tn)) {
-                        visited.add(n); queue.add(n);
-                    }
+                if (visited.contains(n)) continue;
+                Block b = mc.world.getBlockState(n).getBlock();
+                if (ORES.contains(b) && normalize(b).equals(tn)) {
+                    visited.add(n);
+                    bfs.add(n);
+                    if (!queued.contains(n)) { queued.add(n); queue.add(n); }
                 }
             }
         }
-        for (BlockPos p : visited) if (!p.equals(start)) {
-            mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, p, Direction.UP));
-            mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, p, Direction.UP));
-        }
+    }
+
+    @Override public void onTick(MinecraftClient c) {
+        if (c.player == null || c.world == null || c.interactionManager == null) { queue.clear(); queued.clear(); return; }
+        if (queue.isEmpty()) return;
+        if (requirePickaxe.getValue() && !(c.player.getMainHandStack().getItem() instanceof PickaxeItem)) return;
+        BlockPos p = queue.peek();
+        if (c.world.getBlockState(p).isAir()) { queued.remove(queue.poll()); return; }
+        if (c.player.getEyePos().squaredDistanceTo(Vec3d.ofCenter(p)) > 22.0) { queued.remove(queue.poll()); return; }
+        c.interactionManager.updateBlockBreakingProgress(p, Direction.UP);
+        c.player.swingHand(Hand.MAIN_HAND);
     }
 }

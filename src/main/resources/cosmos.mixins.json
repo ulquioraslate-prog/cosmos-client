@@ -6,7 +6,8 @@
     "BlockBreakMixin",
     "ClientPlayNetworkHandlerMixin",
     "PlayerEntityMixin",
-    "RenderTickCounterMixin"
+    "RenderTickCounterMixin",
+    "SimpleOptionMixin"
   ],
   "injectors": {
     "defaultRequire": 0

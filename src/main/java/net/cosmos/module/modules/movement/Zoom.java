@@ -14,20 +14,31 @@ public class Zoom extends Module {
     static { zoomKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.cosmosclient.zoom", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_Z, "category.cosmosclient")); }
 
     public final NumberSetting fov   = addSetting(new NumberSetting("FOV",   "Zoomed FOV",    10, 1, 40));
-    public final NumberSetting speed = addSetting(new NumberSetting("Speed", "Smooth speed", 0.2, 0.05, 1));
+    public final NumberSetting speed = addSetting(new NumberSetting("Speed", "Smooth speed", 0.3, 0.05, 1));
 
     private double prevFov = 70, curFov = 70;
-    private boolean wasZooming = false;
+    private boolean captured = false;
 
     public Zoom() { super("Zoom", "Smooth zoom (hold Z)", Category.MOVEMENT); }
 
+    @Override public void onEnable() { captured = false; }
+
     @Override public void onTick(MinecraftClient c) {
-        if (!enabled) return;
+        if (c.options == null) return;
+        if (!captured) {
+            prevFov = c.options.getFov().getValue();
+            curFov = prevFov;
+            captured = true;
+        }
         boolean zooming = zoomKey.isPressed();
-        if (zooming && !wasZooming) { prevFov = c.options.getFov().getValue(); }
-        wasZooming = zooming;
         double target = zooming ? fov.getValue() : prevFov;
         curFov += (target - curFov) * speed.getValue();
-        c.options.getFov().setValue((int) curFov);
+        c.options.getFov().setValue((int) Math.round(curFov));
+    }
+
+    @Override public void onDisable() {
+        MinecraftClient c = MinecraftClient.getInstance();
+        if (captured && c != null && c.options != null) c.options.getFov().setValue((int) prevFov);
+        captured = false;
     }
 }
