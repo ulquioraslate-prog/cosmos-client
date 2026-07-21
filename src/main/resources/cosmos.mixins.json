@@ -7,7 +7,10 @@
     "GameRendererMixin",
     "ClientPlayerEntityMixin",
     "ClientPlayerInteractionManagerMixin",
-    "WorldRendererMixin"
+    "WorldRendererMixin",
+    "ClientPlayNetworkHandlerMixin"
   ],
-  "injectors": { "defaultRequire": 1 }
+  "injectors": {
+    "defaultRequire": 1
+  }
 }
